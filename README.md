@@ -1,2 +1,2 @@
 # WP-I-V-Tabs-in-Posts
-WordPress images and video tabs in posts  
+Plugin insert tab with screenshots and video in wordpress post

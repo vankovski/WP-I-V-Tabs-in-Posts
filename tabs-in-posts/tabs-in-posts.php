@@ -31,11 +31,14 @@ function my_scripts_method(){
 
 add_filter( 'the_content', 'add_tabs_to_post_content' );
 function add_tabs_to_post_content( $content ) {
-    if(!is_single()) return $content; // Обработчик работает только в таксономии posts
+    if(is_single(get_the_ID())) { // Обработчик работает только в таксономии posts
     
-    // Получаем значения полей
     $post_id = get_the_ID();
+    
+    // Проверяем включен ли чекбокс в форме редактирования 
     $enable_tabs = get_post_meta( $post_id, 'enable_tabs', true ); 
+    if ($enable_tabs) {
+
     $videourl_tabs = get_post_meta( $post_id, 'videourl_tabs', true );
 
     function getYoutubeEmbedUrl($url){  // Функция конвертации адреса YouTube
@@ -53,15 +56,12 @@ function add_tabs_to_post_content( $content ) {
     $videourl_tabs = getYoutubeEmbedUrl($videourl_tabs); // Получаем oembed url видео с YouTube
     $images_tabs = get_post_meta( $post_id, 'images_tabs', false ); // Получаем массив картинок
     $paragraph_tabs = get_post_meta( $post_id, 'paragraph_tabs', true ); 
-    
-
-    if ($enable_tabs) {
-        $paragraphAfter = $paragraph_tabs; // После какого параграфа вставляем таб
-        $content = explode ( "</p>", $content );
-        $new_content = '';
-        for ( $i = 0; $i < count ( $content ); $i ++ ) {
-            if ( $i == $paragraphAfter ) {
-                $new_content .= '
+    $paragraphAfter = $paragraph_tabs; // После какого параграфа вставляем таб
+    $content = explode ( "</p>", $content );
+    $new_content = '';
+    for ( $i = 0; $i < count ( $content ); $i ++ ) {
+        if ( $i == $paragraphAfter ) {
+            $new_content .= '
     <div class="tabs">
   
   <ul class="tabs__caption">
@@ -73,21 +73,21 @@ function add_tabs_to_post_content( $content ) {
     <div class="tabs__gallery">';
         if ( $images_tabs ) {
             foreach ( $images_tabs as $image ) {
-            $class = "post-attachment mime-" . sanitize_title( $image->post_mime_type );
-            $thumburl = wp_get_attachment_image_url( $image['ID'], 'full');
-            $size = getimagesize($thumburl);                                            
-            if ($size[0]>$size[1]) {
-                $thumbimg = wp_get_attachment_image( $image['ID'], 'large');
-                $imgclass='horisontal';
+                $class = "post-attachment mime-" . sanitize_title( $image->post_mime_type );
+                $thumburl = wp_get_attachment_image_url( $image['ID'], 'full');
+                $size = getimagesize($thumburl);                                            
+                if ($size[0]>$size[1]) {
+                    $thumbimg = wp_get_attachment_image( $image['ID'], 'large');
+                    $imgclass='horisontal';
+                }
+                else { 
+                    $thumbimg = wp_get_attachment_image( $image['ID'], 'medium');
+                    $imgclass = 'vertical'; 
+                }
+                $new_content .= '<div style="padding:5px;" class="' . $class . ' data-design-thumbnail"><a class="'.$imgclass.'" href="'.$thumburl.'">'. $thumbimg.'</a></div>';
             }
-            else { 
-                $thumbimg = wp_get_attachment_image( $image['ID'], 'medium');
-                $imgclass = 'vertical'; 
-            }
-            $new_content .= '<div style="padding:5px;" class="' . $class . ' data-design-thumbnail"><a class="'.$imgclass.'" href="'.$thumburl.'">'. $thumbimg.'</a></div>';
-    }
-}
-    $new_content .= '</div>
+        }
+            $new_content .= '</div>
   </div>
   
   <div class="tabs__content">
@@ -97,12 +97,14 @@ function add_tabs_to_post_content( $content ) {
   </div>
   
 </div><!-- .tabs-->';    
-            }
-            $new_content .= $content[$i] . "</p>";
-        }
-        return $new_content;
+       }
+    $new_content .= $content[$i] . "</p>";
     }
-
+    return $new_content;
+    }
     else return $content;
+
+}
+else return $content;
 }
 ?>
